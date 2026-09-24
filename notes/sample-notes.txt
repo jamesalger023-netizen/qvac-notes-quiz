@@ -1,0 +1,32 @@
+Photosynthesis — Biology 101 notes
+
+Photosynthesis is the process plants, algae, and some bacteria use to convert
+light energy into chemical energy stored in glucose. It happens mainly in the
+chloroplasts of plant cells, in structures called thylakoids, using the
+pigment chlorophyll to absorb light (mostly red and blue wavelengths; green
+is reflected, which is why plants look green).
+
+The overall reaction is:
+6 CO2 + 6 H2O + light energy -> C6H12O6 + 6 O2
+
+Photosynthesis has two main stages:
+
+1. Light-dependent reactions (in the thylakoid membrane)
+   - Sunlight is absorbed by chlorophyll.
+   - Water molecules are split (photolysis), releasing oxygen as a byproduct.
+   - Energy is captured in ATP and NADPH, which are used in the next stage.
+
+2. Light-independent reactions / Calvin cycle (in the stroma)
+   - Does not require light directly, but depends on the ATP and NADPH made
+     in stage 1.
+   - Carbon dioxide from the air is "fixed" into organic molecules.
+   - Over multiple turns of the cycle, glucose is built up.
+
+Factors that affect the rate of photosynthesis:
+- Light intensity: more light generally increases the rate, up to a point.
+- CO2 concentration: more available CO2 can increase the rate.
+- Temperature: enzymes involved have an optimal temperature range; too hot or
+  too cold slows the reaction.
+
+Photosynthesis is the foundation of most food chains on Earth and is the
+main source of atmospheric oxygen.
