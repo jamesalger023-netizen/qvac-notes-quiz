@@ -1,90 +1,101 @@
-# notes-quiz
+powershell -Command "@' 
+#!/usr/bin/env node
+import { readFile } from 'fs/promises';
+import { loadModel, completion, unloadModel, LLAMA_3_2_1B_INST_Q4_0 } from '@qvac/sdk';
 
-Turn your own study notes into a quiz — generated **entirely on-device** with
-[Tether's QVAC SDK](https://qvac.tether.io). No API key, no cloud call, no
-usage bill. Your notes never leave your machine.
+function parseArgs(argv) {
+  const args = argv.slice(2);
+  const notesPath = args[0];
+  let questionCount = 5;
+  const qIndex = args.indexOf('--questions');
+  if (qIndex !== -1 && args[qIndex + 1]) {
+    const parsed = Number.parseInt(args[qIndex + 1], 10);
+    if (Number.isFinite(parsed) && parsed > 0) questionCount = parsed;
+  }
+  if (!notesPath) {
+    console.error('Usage: node src/quiz.js <path-to-notes.txt> [--questions N]');
+    process.exit(1);
+  }
+  return { notesPath, questionCount };
+}
 
-Give it a `.txt` file of notes and it loads a small local language model,
-runs it locally, and streams a numbered quiz (with an answer key) straight to
-your terminal.
+async function main() {
+  const { notesPath, questionCount } = parseArgs(process.argv);
 
-## What it does / which QVAC function it calls
+  let notes;
+  try {
+    notes = await readFile(notesPath, 'utf-8');
+  } catch (err) {
+    console.error('Could not read notes file:', err.message);
+    process.exit(1);
+  }
 
-The app calls `loadModel()` to load `LLAMA_3_2_1B_INST_Q4_0` (downloaded once
-from QVAC's distributed model registry and cached locally), then calls
-`completion()` with your notes embedded in the prompt, streaming the model's
-response token-by-token to stdout. Everything — the download aside — runs on
-your CPU/GPU, not on a server.
+  if (!notes.trim()) {
+    console.error('Notes file is empty.');
+    process.exit(1);
+  }
 
-## Why I built it
+  console.log('Loading local model with QVAC SDK...');
 
-Studying from your own notes/PDFs often means pasting private material into
-someone else's cloud chatbot. This keeps the whole flow — notes in, quiz
-out — on your own hardware.
+  let modelId;
+  try {
+    modelId = await loadModel({ modelSrc: LLAMA_3_2_1B_INST_Q4_0 });
+  } catch (err) {
+    console.error('Failed to load model:', err);
+    process.exit(1);
+  }
 
-## SDK version used
+  console.log(`Model loaded. Generating ${questionCount}-question quiz on-device...\n`);
 
-`@qvac/sdk` **0.19.0** or newer (declared in `package.json`).
+  const prompt = [
+    `Create exactly ${questionCount} multiple-choice questions using ONLY the study notes below.`,
+    'Every question must have exactly four choices: A, B, C, D.',
+    'Each question must have exactly one correct answer.',
+    'Do not use outside knowledge.',
+    'Do not invent facts.',
+    'The correct answer must be directly supported by the notes.',
+    'Make wrong choices clearly wrong according to the notes.',
+    'After all questions, write ANSWER KEY:',
+    'Give the correct letter and answer for each question.',
+    '',
+    'FORMAT:',
+    '1. Question?',
+    'A. Choice',
+    'B. Choice',
+    'C. Choice',
+    'D. Choice',
+    '',
+    'ANSWER KEY:',
+    '1. B. Correct answer',
+    '',
+    '--- NOTES START ---',
+    notes.trim(),
+    '--- NOTES END ---'
+  ].join('\n');
 
-## Requirements
+  const history = [{ role: 'user', content: prompt }];
 
-- Node.js >= 22.17
-- ~2 GB free RAM, a few hundred MB free disk for the model
-- See QVAC's [system requirements](https://docs.qvac.tether.io/sdk/system-requirements/)
-  for OS/GPU details (macOS 14+, Linux with Vulkan, Windows with Vulkan, etc.)
+  try {
+    const result = completion({
+      modelId: modelId,
+      history: history,
+      stream: true
+    });
 
-## Install
+    for await (const token of result.tokenStream) {
+      process.stdout.write(token);
+    }
 
-```bash
-git clone https://github.com/<your-username>/qvac-notes-quiz.git
-cd qvac-notes-quiz
-npm install
-```
+    process.stdout.write('\n');
+  } catch (err) {
+    console.error('\nCompletion failed:', err);
+  } finally {
+    await unloadModel({ modelId });
+  }
+}
 
-## Run
-
-Using the included sample notes (about photosynthesis):
-
-```bash
-npm start
-```
-
-Or point it at your own notes file:
-
-```bash
-QVAC_CONFIG_PATH=./qvac.config.json node src/quiz.js path/to/your-notes.txt --questions 5
-```
-
-The first run downloads the model (a few hundred MB) and caches it under
-`~/.qvac/models`. Every run after that is fully offline.
-
-### Example output
-
-```
-▸ Loading local model with QVAC SDK (first run downloads it, then it is cached)...
-▸ Downloading model: 100% (770.1/770.1 MB)
-▸ Model loaded (id: llama-3.2-1b-inst-q4_0). Generating a 5-question quiz on-device...
-
-1. What pigment absorbs light for photosynthesis, and why do plants look green?
-2. Where in the plant cell do the light-dependent reactions take place?
-   A) Stroma  B) Thylakoid membrane  C) Mitochondria  D) Nucleus
-...
-
-ANSWER KEY:
-1. Chlorophyll; it reflects green light while absorbing red and blue.
-2. B) Thylakoid membrane
-...
-```
-
-## Project structure
-
-```
-src/quiz.js          # the app: loadModel() + completion()
-notes/sample-notes.txt
-qvac.config.json     # enables QVAC console logging
-package.json          # declares @qvac/sdk as a dependency
-```
-
-## License
-
-MIT — see [LICENSE](./LICENSE).
+main().catch((err) => {
+  console.error('Unexpected error:', err);
+  process.exit(1);
+});
+'@ | Set-Content src\quiz.js"
