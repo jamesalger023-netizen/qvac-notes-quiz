@@ -1,0 +1,29 @@
+{
+  "name": "qvac-notes-quiz",
+  "version": "1.0.0",
+  "description": "Turn your own study notes into a quiz, generated entirely on-device with Tether's QVAC SDK. No API key, no cloud, no bill.",
+  "type": "module",
+  "main": "src/quiz.js",
+  "bin": {
+    "notes-quiz": "src/quiz.js"
+  },
+  "scripts": {
+    "start": "node src/quiz.js notes/sample-notes.txt"
+  },
+  "keywords": [
+    "qvac",
+    "on-device-ai",
+    "local-llm",
+    "offline",
+    "quiz",
+    "study"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@qvac/sdk": "^0.19.0"
+  },
+  "engines": {
+    "node": ">=22.17"
+  }
+}
