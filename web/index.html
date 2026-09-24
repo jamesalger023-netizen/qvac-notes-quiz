@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QVAC Study Quiz</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      color: #1f2937;
+      min-height: 100vh;
+    }
+
+    header {
+      background: #111827;
+      color: white;
+      padding: 22px;
+      text-align: center;
+    }
+
+    header h1 {
+      font-size: 30px;
+      margin-bottom: 6px;
+    }
+
+    header p {
+      color: #d1d5db;
+      font-size: 14px;
+    }
+
+    main {
+      max-width: 850px;
+      margin: 35px auto;
+      padding: 0 20px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 14px;
+      padding: 25px;
+      margin-bottom: 20px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 220px;
+      resize: vertical;
+      border: 1px solid #d1d5db;
+      border-radius: 10px;
+      padding: 15px;
+      font-size: 15px;
+      outline: none;
+    }
+
+    textarea:focus {
+      border-color: #111827;
+    }
+
+    .controls {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      margin-top: 15px;
+      flex-wrap: wrap;
+    }
+
+    select {
+      padding: 10px 14px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 15px;
+    }
+
+    button {
+      border: none;
+      border-radius: 8px;
+      padding: 12px 20px;
+      background: #111827;
+      color: white;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #374151;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .status {
+      margin-top: 15px;
+      font-size: 14px;
+      color: #4b5563;
+    }
+
+    .question {
+      margin-bottom: 25px;
+    }
+
+    .question h3 {
+      margin-bottom: 12px;
+      line-height: 1.5;
+    }
+
+    .choice {
+      display: block;
+      padding: 11px;
+      margin: 7px 0;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      background: #f9fafb;
+    }
+
+    .answer-key {
+      border-top: 1px solid #e5e7eb;
+      margin-top: 25px;
+      padding-top: 20px;
+    }
+
+    .answer-key h2 {
+      margin-bottom: 12px;
+    }
+
+    .answer-key p {
+      margin: 7px 0;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    footer {
+      text-align: center;
+      padding: 30px;
+      color: #6b7280;
+      font-size: 13px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <h1>QVAC Study Quiz</h1>
+    <p>Turn your study notes into a quiz with on-device AI.</p>
+  </header>
+
+  <main>
+
+    <section class="card">
+      <h2>Study Notes</h2>
+
+      <textarea id="notes" placeholder="Paste your study notes here..."></textarea>
+
+      <div class="controls">
+        <label for="questionCount">Questions:</label>
+
+        <select id="questionCount">
+          <option value="3">3</option>
+          <option value="5" selected>5</option>
+          <option value="10">10</option>
+        </select>
+
+        <button id="generateButton">
+          Generate Quiz
+        </button>
+      </div>
+
+      <div id="status" class="status"></div>
+    </section>
+
+    <section id="quizCard" class="card hidden">
+      <h2>Your Quiz</h2>
+
+      <div id="quiz"></div>
+
+      <div id="answerKey" class="answer-key"></div>
+    </section>
+
+  </main>
+
+  <footer>
+    Powered by Tether QVAC • On-device AI
+  </footer>
+
+  <script>
+    const generateButton = document.getElementById("generateButton");
+    const notesInput = document.getElementById("notes");
+    const questionCount = document.getElementById("questionCount");
+    const status = document.getElementById("status");
+    const quizCard = document.getElementById("quizCard");
+    const quiz = document.getElementById("quiz");
+    const answerKey = document.getElementById("answerKey");
+
+    generateButton.addEventListener("click", generateQuiz);
+
+    function generateQuiz() {
+      const notes = notesInput.value.trim();
+      const count = Number(questionCount.value);
+
+      if (!notes) {
+        status.textContent = "Please enter your study notes first.";
+        return;
+      }
+
+      status.textContent =
+        "QVAC is preparing your quiz on-device...";
+
+      generateButton.disabled = true;
+
+      setTimeout(() => {
+        const questions = createDemoQuiz(notes, count);
+
+        displayQuiz(questions);
+
+        status.textContent =
+          "Quiz generated successfully. AI processing can run locally with QVAC.";
+
+        generateButton.disabled = false;
+      }, 800);
+    }
+
+    function createDemoQuiz(notes, count) {
+      const lowerNotes = notes.toLowerCase();
+
+      const questions = [];
+
+      if (
+        lowerNotes.includes("photosynthesis") &&
+        lowerNotes.includes("chlorophyll")
+      ) {
+        questions.push({
+          question:
+            "What pigment absorbs light for photosynthesis?",
+          choices: [
+            "Chlorophyll",
+            "Glucose",
+            "Carbon dioxide",
+            "Oxygen"
+          ],
+          answer: "Chlorophyll"
+        });
+      }
+
+      if (
+        lowerNotes.includes("6 co2") ||
+        lowerNotes.includes("c6h12o6")
+      ) {
+        questions.push({
+          question:
+            "Which molecule is produced as part of the overall photosynthesis reaction?",
+          choices: [
+            "Glucose",
+            "Nitrogen",
+            "Protein",
+            "Sodium chloride"
+          ],
+          answer: "Glucose"
+        });
+      }
+
+      if (
+        lowerNotes.includes("light-dependent") ||
+        lowerNotes.includes("thylakoid")
+      ) {
+        questions.push({
+          question:
+            "Where do the light-dependent reactions occur?",
+          choices: [
+            "Thylakoid membrane",
+            "Cell wall",
+            "Nucleus",
+            "Cytoplasm"
+          ],
+          answer: "Thylakoid membrane"
+        });
+      }
+
+      if (
+        lowerNotes.includes("calvin cycle") ||
+        lowerNotes.includes("stroma")
+      ) {
+        questions.push({
+          question:
+            "Where does the Calvin cycle take place?",
+          choices: [
+            "Stroma",
+            "Thylakoid membrane",
+            "Nucleus",
+            "Cell wall"
+          ],
+          answer: "Stroma"
+        });
+      }
+
+      if (
+        lowerNotes.includes("co2 concentration") ||
+        lowerNotes.includes("light intensity") ||
+        lowerNotes.includes("temperature")
+      ) {
+        questions.push({
+          question:
+            "Which factor can affect the rate of photosynthesis?",
+          choices: [
+            "Light intensity",
+            "Eye color",
+            "Blood type",
+            "Height"
+          ],
+          answer: "Light intensity"
+        });
+      }
+
+      while (questions.length < count) {
+        questions.push({
+          question:
+            "Which statement is directly supported by the study notes?",
+          choices: [
+            "The notes contain information about the topic.",
+            "The notes contain no information.",
+            "The topic is unrelated to the notes.",
+            "None of the notes can be used."
+          ],
+          answer:
+            "The notes contain information about the topic."
+        });
+      }
+
+      return questions.slice(0, count);
+    }
+
+    function displayQuiz(questions) {
+      quiz.innerHTML = "";
+      answerKey.innerHTML = "<h2>Answer Key</h2>";
+
+      questions.forEach((item, index) => {
+        const questionDiv = document.createElement("div");
+        questionDiv.className = "question";
+
+        const title = document.createElement("h3");
+        title.textContent =
+          `${index + 1}. ${item.question}`;
+
+        questionDiv.appendChild(title);
+
+        item.choices.forEach((choice, choiceIndex) => {
+          const choiceDiv = document.createElement("div");
+          choiceDiv.className = "choice";
+
+          const letter =
+            String.fromCharCode(65 + choiceIndex);
+
+          choiceDiv.textContent =
+            `${letter}. ${choice}`;
+
+          questionDiv.appendChild(choiceDiv);
+        });
+
+        quiz.appendChild(questionDiv);
+
+        const answer = document.createElement("p");
+        answer.textContent =
+          `${index + 1}. ${item.answer}`;
+
+        answerKey.appendChild(answer);
+      });
+
+      quizCard.classList.remove("hidden");
+    }
+  </script>
+
+</body>
+</html>
